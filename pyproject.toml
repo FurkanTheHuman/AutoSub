@@ -8,6 +8,7 @@ dependencies = [
   "python-vlc>=3.0.20123",
   "openai-whisper>=20231117",
   "requests>=2.28",
+  "python-dotenv>=1.0",
 ]
 
 [tool.uv]

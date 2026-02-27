@@ -2,9 +2,11 @@ from __future__ import annotations
 import re, struct, sys, os, shutil, traceback
 from pathlib import Path
 from urllib.parse import urlparse, unquote
+from dotenv import load_dotenv
 from PyQt6 import QtCore, QtGui, QtWidgets
 import vlc, requests, whisper
 
+load_dotenv()
 OS_API = "https://api.opensubtitles.com/api/v1"
 OS_KEY = os.environ["OPENSUBTITLES_API_KEY"]
 OS_USER = os.environ["OPENSUBTITLES_USERNAME"]
