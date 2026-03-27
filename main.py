@@ -11,6 +11,9 @@ import uuid
 from pathlib import Path
 from urllib.parse import quote, unquote, urlparse
 
+if sys.platform.startswith("linux") and os.environ.get("WAYLAND_DISPLAY") and not os.environ.get("QT_QPA_PLATFORM"):
+	os.environ["QT_QPA_PLATFORM"] = "xcb"
+
 from dotenv import load_dotenv
 from PyQt6 import QtCore, QtGui, QtNetwork, QtWidgets
 import requests
@@ -571,6 +574,10 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		self._vf.setObjectName("videoFrame")
 		self._vf.setStyleSheet(VIDEO_STYLE)
 		self._vf.setFrameStyle(QtWidgets.QFrame.Shape.StyledPanel | QtWidgets.QFrame.Shadow.Raised)
+		self._vf.setAttribute(QtCore.Qt.WidgetAttribute.WA_NativeWindow, True)
+		self._vf.setAttribute(QtCore.Qt.WidgetAttribute.WA_OpaquePaintEvent, True)
+		if is_linux():
+			self._vf.setAttribute(QtCore.Qt.WidgetAttribute.WA_DontCreateNativeAncestors, True)
 		self._vf.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
 		self._vf.installEventFilter(self)
 		self._rl.addWidget(self._vf, stretch=1)
@@ -776,6 +783,8 @@ class VideoPlayer(QtWidgets.QMainWindow):
 	def _load(self, path, remote=False):
 		self.media = self.instance.media_new(str(path))
 		self.player.set_media(self.media)
+		self._vf.show()
+		self._vf.raise_()
 		self._vf.winId()
 		QtWidgets.QApplication.processEvents()
 		wid = int(self._vf.winId())
