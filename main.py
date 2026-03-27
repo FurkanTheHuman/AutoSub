@@ -147,6 +147,14 @@ def media_signature(path: Path):
 	return f"{title}|{size}"
 
 
+def media_identity(path: Path):
+	return {
+		"name": path.name,
+		"stem": clean_title(path.stem).lower(),
+		"signature": media_signature(path),
+	}
+
+
 class SubtitleWorker(QtCore.QObject):
 	finished = QtCore.pyqtSignal(str, object)
 	errored = QtCore.pyqtSignal(str)
@@ -424,7 +432,6 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		self._jobs: list = []
 		self._jid = 0
 		self._sync_applying = False
-		self._last_sync_signature = None
 		self._resume_after_seek = False
 		self.sync = WatchSyncClient(self)
 		self._build_ui()
@@ -574,12 +581,21 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		self._vf.setObjectName("videoFrame")
 		self._vf.setStyleSheet(VIDEO_STYLE)
 		self._vf.setFrameStyle(QtWidgets.QFrame.Shape.StyledPanel | QtWidgets.QFrame.Shadow.Raised)
-		self._vf.setAttribute(QtCore.Qt.WidgetAttribute.WA_NativeWindow, True)
-		self._vf.setAttribute(QtCore.Qt.WidgetAttribute.WA_OpaquePaintEvent, True)
+		vbox = QtWidgets.QVBoxLayout(self._vf)
+		vbox.setContentsMargins(10, 10, 10, 10)
+		vbox.setSpacing(0)
+		self._video_surface = QtWidgets.QWidget()
+		self._video_surface.setObjectName("videoSurface")
+		self._video_surface.setStyleSheet("QWidget#videoSurface{background:black;border-radius:12px}")
+		self._video_surface.setAttribute(QtCore.Qt.WidgetAttribute.WA_NativeWindow, True)
+		self._video_surface.setAttribute(QtCore.Qt.WidgetAttribute.WA_OpaquePaintEvent, True)
 		if is_linux():
-			self._vf.setAttribute(QtCore.Qt.WidgetAttribute.WA_DontCreateNativeAncestors, True)
+			self._video_surface.setAttribute(QtCore.Qt.WidgetAttribute.WA_DontCreateNativeAncestors, True)
+		self._video_surface.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
 		self._vf.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
 		self._vf.installEventFilter(self)
+		self._video_surface.installEventFilter(self)
+		vbox.addWidget(self._video_surface)
 		self._rl.addWidget(self._vf, stretch=1)
 
 		self._prog_w = QtWidgets.QFrame()
@@ -783,11 +799,11 @@ class VideoPlayer(QtWidgets.QMainWindow):
 	def _load(self, path, remote=False):
 		self.media = self.instance.media_new(str(path))
 		self.player.set_media(self.media)
-		self._vf.show()
-		self._vf.raise_()
-		self._vf.winId()
+		self._video_surface.show()
+		self._video_surface.raise_()
+		self._video_surface.winId()
 		QtWidgets.QApplication.processEvents()
-		wid = int(self._vf.winId())
+		wid = int(self._video_surface.winId())
 		try:
 			if sys.platform == "darwin":
 				self.player.set_nsobject(wid)
@@ -924,19 +940,23 @@ class VideoPlayer(QtWidgets.QMainWindow):
 			return
 		if event_type != "load" and self.current_index is not None and self.current_index < len(self.playlist):
 			payload.setdefault("media", self._media_payload(self.playlist[self.current_index]))
-		signature = (event_type, json.dumps(payload, sort_keys=True))
-		if signature == self._last_sync_signature:
-			return
-		self._last_sync_signature = signature
 		self.sync.send_event(event_type, payload)
 
 	def _media_payload(self, path: Path):
-		return {"name": path.name, "signature": media_signature(path)}
+		return media_identity(path)
 
-	def _find_playlist_index(self, signature: str):
+	def _find_playlist_index(self, media: dict):
+		signature = media.get("signature")
+		stem = (media.get("stem") or "").strip().lower()
+		name = (media.get("name") or "").strip().lower()
 		for i in range(self._plw.count()):
 			item = self._plw.item(i)
-			if item.data(QtCore.Qt.ItemDataRole.UserRole + 2) == signature:
+			path = Path(item.data(QtCore.Qt.ItemDataRole.UserRole))
+			if signature and item.data(QtCore.Qt.ItemDataRole.UserRole + 2) == signature:
+				return i
+			if stem and clean_title(path.stem).lower() == stem:
+				return i
+			if name and path.name.lower() == name:
 				return i
 		return None
 
@@ -948,11 +968,10 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		if event_type is None and event.get("payload") is None:
 			return
 		media = payload.get("media", {})
-		signature = media.get("signature")
-		idx = self._find_playlist_index(signature) if signature else None
+		idx = self._find_playlist_index(media) if media else None
 		self._sync_applying = True
 		try:
-			if signature and idx is None:
+			if media and idx is None:
 				self._status.setText(f"Partner opened {media.get('name', 'a video')}. Add the same file locally to sync.")
 				return
 			if event_type == "load" and idx is not None:
@@ -995,7 +1014,7 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		e.acceptProposedAction()
 
 	def eventFilter(self, obj, ev):
-		if obj is self._vf and ev.type() == QtCore.QEvent.Type.MouseButtonPress:
+		if obj in (self._vf, self._video_surface) and ev.type() == QtCore.QEvent.Type.MouseButtonPress:
 			self._toggle_play()
 			return True
 		return super().eventFilter(obj, ev)
