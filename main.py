@@ -36,25 +36,40 @@ LANG_MAP = {
 }
 
 STYLE = (
-	"QWidget{font-family:'Manrope','Avenir Next','Helvetica Neue',sans-serif;font-size:13px;color:#222}"
-	"QMainWindow{background:#FBF700}"
-	"QPushButton{background:#0074FB;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-weight:600}"
-	"QPushButton:hover{background:#005FCC}QPushButton:disabled{background:#B3D4FC;color:#fff}"
-	"QSlider::groove:horizontal{height:8px;background:#FBF700;border-radius:4px}"
-	"QSlider::handle:horizontal{background:#0074FB;width:16px;height:16px;margin:-4px 0;border-radius:8px}"
-	"QSlider::sub-page:horizontal{background:#0074FB;border-radius:4px}"
-	"QSlider::add-page:horizontal{background:#FBF700;border-radius:4px}"
-	"QLabel{font-size:12px;color:#222}"
-	"QFrame#playlistFrame,QFrame#syncFrame{background:#fff;border:1px solid #FBF700;border-radius:12px}"
-	"QListWidget{background:transparent;border:none;outline:none}"
-	"QListWidget::item{padding:8px 10px;border-radius:8px}"
-	"QListWidget::item:selected{background:#0074FB;color:#fff}"
-	"QListWidget::item:hover{background:#E3F0FF}"
-	"QLineEdit,QComboBox{background:#fff;border:1px solid #BCD7FF;border-radius:8px;padding:6px 8px}"
+	"QWidget{font-family:'Inter','Avenir Next','Helvetica Neue',sans-serif;font-size:13px;color:#E5E7EB;"
+	"selection-background-color:#2563EB;selection-color:#F8FAFC}"
+	"QMainWindow{background:#0F172A}"
+	"QFrame#playlistFrame,QFrame#syncFrame,QFrame#controlCard,QFrame#progressCard{"
+	"background:#111827;border:1px solid #1F2937;border-radius:18px}"
+	"QFrame#videoFrame{background:#020617;border:1px solid #1E293B;border-radius:22px}"
+	"QPushButton{background:#2563EB;color:#F8FAFC;border:none;border-radius:10px;padding:9px 14px;font-weight:600}"
+	"QPushButton:hover{background:#1D4ED8}"
+	"QPushButton:pressed{background:#1E40AF}"
+	"QPushButton:disabled{background:#334155;color:#94A3B8}"
+	"QPushButton#secondaryButton{background:#1F2937;color:#E5E7EB;border:1px solid #334155}"
+	"QPushButton#secondaryButton:hover{background:#273449}"
+	"QPushButton#dangerButton{background:#7F1D1D;color:#FEE2E2;border:1px solid #991B1B}"
+	"QPushButton#dangerButton:hover{background:#991B1B}"
+	"QLabel{font-size:12px;color:#CBD5E1}"
+	"QLabel#titleLabel{font-size:16px;font-weight:700;color:#F8FAFC}"
+	"QLabel#sectionLabel{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#94A3B8}"
+	"QLabel#mutedLabel{color:#94A3B8}"
+	"QLabel#statusLabel{color:#E2E8F0;font-weight:600}"
+	"QLabel#badgeLabel{background:#172554;color:#BFDBFE;border:1px solid #1D4ED8;border-radius:999px;padding:4px 10px;font-weight:700}"
+	"QSlider::groove:horizontal{height:8px;background:#1E293B;border-radius:4px}"
+	"QSlider::handle:horizontal{background:#E2E8F0;width:16px;height:16px;margin:-5px 0;border-radius:8px}"
+	"QSlider::sub-page:horizontal{background:#2563EB;border-radius:4px}"
+	"QSlider::add-page:horizontal{background:#334155;border-radius:4px}"
+	"QListWidget{background:#0B1220;border:1px solid #1F2937;border-radius:14px;outline:none;padding:6px}"
+	"QListWidget::item{padding:10px 12px;border-radius:10px;color:#E5E7EB}"
+	"QListWidget::item:selected{background:#1D4ED8;color:#F8FAFC}"
+	"QListWidget::item:hover{background:#172033}"
+	"QLineEdit,QComboBox{background:#0B1220;border:1px solid #334155;border-radius:10px;padding:8px 10px;color:#F8FAFC}"
+	"QLineEdit:focus,QComboBox:focus{border:1px solid #2563EB}"
 )
 VIDEO_STYLE = (
-	"QFrame{background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 #FBF700,stop:1 #fff);"
-	"border:1px solid #0074FB;border-radius:12px}"
+	"QFrame{background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 #020617,stop:0.6 #0B1220,stop:1 #111827);"
+	"border:1px solid #1E293B;border-radius:22px}"
 )
 
 
@@ -380,6 +395,7 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		self._jid = 0
 		self._sync_applying = False
 		self._last_sync_signature = None
+		self._resume_after_seek = False
 		self.sync = WatchSyncClient(self)
 		self._build_ui()
 		self.timer = QtCore.QTimer(self)
@@ -393,21 +409,23 @@ class VideoPlayer(QtWidgets.QMainWindow):
 	def _build_ui(self):
 		c = QtWidgets.QWidget()
 		self._ml = QtWidgets.QHBoxLayout(c)
-		self._ml.setContentsMargins(14, 14, 14, 14)
-		self._ml.setSpacing(10)
+		self._ml.setContentsMargins(18, 18, 18, 18)
+		self._ml.setSpacing(14)
 
 		self._pf = QtWidgets.QFrame()
 		self._pf.setObjectName("playlistFrame")
 		self._pf.setFrameStyle(QtWidgets.QFrame.Shape.StyledPanel | QtWidgets.QFrame.Shadow.Raised)
 		pl = QtWidgets.QVBoxLayout(self._pf)
-		pl.setContentsMargins(10, 10, 10, 10)
-		pl.setSpacing(8)
+		pl.setContentsMargins(16, 16, 16, 16)
+		pl.setSpacing(12)
 
 		hdr = QtWidgets.QHBoxLayout()
-		hdr.addWidget(QtWidgets.QLabel("Playlist"))
+		playlist_title = QtWidgets.QLabel("Library")
+		playlist_title.setObjectName("titleLabel")
+		hdr.addWidget(playlist_title)
 		lang_layout = QtWidgets.QVBoxLayout()
-		lang_label = QtWidgets.QLabel("Language / Язык")
-		lang_label.setStyleSheet("font-size:11px;color:#0074FB;font-weight:600")
+		lang_label = QtWidgets.QLabel("Subtitles")
+		lang_label.setObjectName("sectionLabel")
 		lang_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
 		lang_layout.addWidget(lang_label)
 		self.lang_combo = QtWidgets.QComboBox()
@@ -421,24 +439,30 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		hdr.addWidget(lang_widget)
 		hdr.addStretch()
 		self._activity = QtWidgets.QLabel("")
-		self._activity.setStyleSheet("color:#0074FB;font-weight:600")
+		self._activity.setObjectName("badgeLabel")
 		self._activity.hide()
 		hdr.addWidget(self._activity)
 		self._sel_btn = QtWidgets.QPushButton("Select All")
+		self._sel_btn.setObjectName("secondaryButton")
 		self._sel_btn.clicked.connect(self._toggle_select)
 		self._sel_btn.hide()
 		hdr.addWidget(self._sel_btn)
 		for lbl, fn in [("Download Subs", self._download_subs), ("Add Videos", self._add_videos)]:
 			b = QtWidgets.QPushButton(lbl)
+			if lbl == "Download Subs":
+				b.setObjectName("secondaryButton")
 			b.clicked.connect(fn)
 			hdr.addWidget(b)
 		pl.addLayout(hdr)
 
 		self._plw = QtWidgets.QListWidget()
 		self._plw.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
+		self._plw.itemChanged.connect(self._refresh_selection_button)
 		self._plw.itemDoubleClicked.connect(lambda it: self._play_index(self._plw.row(it)))
 		pl.addWidget(self._plw, stretch=1)
-		pl.addWidget(QtWidgets.QLabel("Subtitle Queue", styleSheet="font-weight:600"))
+		self._queue_label = QtWidgets.QLabel("Subtitle Queue")
+		self._queue_label.setObjectName("sectionLabel")
+		pl.addWidget(self._queue_label)
 		self._qw = QtWidgets.QListWidget()
 		self._qw.setFixedHeight(100)
 		pl.addWidget(self._qw)
@@ -446,15 +470,17 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		self._sync_frame = QtWidgets.QFrame()
 		self._sync_frame.setObjectName("syncFrame")
 		sl = QtWidgets.QVBoxLayout(self._sync_frame)
-		sl.setContentsMargins(10, 10, 10, 10)
-		sl.setSpacing(8)
-		sl.addWidget(QtWidgets.QLabel("Watch Together", styleSheet="font-size:14px;font-weight:700"))
-		sl.addWidget(
-			QtWidgets.QLabel(
-				"Same internet room, different networks. Each side still needs the same local video file.",
-				styleSheet="color:#4B5563",
-			)
+		sl.setContentsMargins(16, 16, 16, 16)
+		sl.setSpacing(10)
+		sync_title = QtWidgets.QLabel("Watch Together")
+		sync_title.setObjectName("titleLabel")
+		sl.addWidget(sync_title)
+		sync_body = QtWidgets.QLabel(
+			"Sync playback across different networks. Both people still need the same local video file."
 		)
+		sync_body.setObjectName("mutedLabel")
+		sync_body.setWordWrap(True)
+		sl.addWidget(sync_body)
 		self._server_in = QtWidgets.QLineEdit("http://127.0.0.1:8765")
 		self._room_in = QtWidgets.QLineEdit("date-night")
 		self._name_in = QtWidgets.QLineEdit(os.environ.get("USER", "You"))
@@ -466,26 +492,32 @@ class VideoPlayer(QtWidgets.QMainWindow):
 			("Room", self._room_in),
 			("Name", self._name_in),
 		]:
-			sl.addWidget(QtWidgets.QLabel(label, styleSheet="font-weight:600"))
+			lab = QtWidgets.QLabel(label)
+			lab.setObjectName("sectionLabel")
+			sl.addWidget(lab)
 			sl.addWidget(widget)
 		btns = QtWidgets.QHBoxLayout()
 		self._connect_btn = QtWidgets.QPushButton("Connect")
 		self._connect_btn.clicked.connect(self._connect_sync)
 		btns.addWidget(self._connect_btn)
 		self._disconnect_btn = QtWidgets.QPushButton("Leave")
+		self._disconnect_btn.setObjectName("dangerButton")
 		self._disconnect_btn.clicked.connect(self.sync.disconnect_room)
 		self._disconnect_btn.setEnabled(False)
 		btns.addWidget(self._disconnect_btn)
 		sl.addLayout(btns)
 		self._sync_status = QtWidgets.QLabel("Not connected")
+		self._sync_status.setObjectName("statusLabel")
 		self._sync_status.setWordWrap(True)
 		self._sync_members = QtWidgets.QLabel("Members: -")
+		self._sync_members.setObjectName("mutedLabel")
 		self._sync_members.setWordWrap(True)
 		sl.addWidget(self._sync_status)
 		sl.addWidget(self._sync_members)
 		pl.addWidget(self._sync_frame)
 
 		self._rl = QtWidgets.QVBoxLayout()
+		self._rl.setSpacing(14)
 		self._vf = QtWidgets.QFrame()
 		self._vf.setObjectName("videoFrame")
 		self._vf.setStyleSheet(VIDEO_STYLE)
@@ -494,40 +526,52 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		self._vf.installEventFilter(self)
 		self._rl.addWidget(self._vf, stretch=1)
 
+		self._prog_w = QtWidgets.QFrame()
+		self._prog_w.setObjectName("progressCard")
 		pr = QtWidgets.QHBoxLayout()
+		pr.setContentsMargins(16, 12, 16, 12)
+		pr.setSpacing(12)
 		self._elapsed = QtWidgets.QLabel("0:00")
 		self._slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
 		self._slider.setRange(0, 1000)
-		self._slider.sliderPressed.connect(lambda: self.player.pause() if self.player.is_playing() else None)
+		self._slider.sliderPressed.connect(self._begin_seek)
 		self._slider.sliderReleased.connect(self._seek)
 		self._total = QtWidgets.QLabel("0:00")
 		pr.addWidget(self._elapsed)
 		pr.addWidget(self._slider, stretch=1)
 		pr.addWidget(self._total)
-		self._prog_w = QtWidgets.QWidget()
 		self._prog_w.setLayout(pr)
 		self._rl.addWidget(self._prog_w)
 
+		self._ctrl_w = QtWidgets.QFrame()
+		self._ctrl_w.setObjectName("controlCard")
 		cl = QtWidgets.QHBoxLayout()
+		cl.setContentsMargins(16, 12, 16, 12)
+		cl.setSpacing(12)
 		self._play_btn = QtWidgets.QPushButton("Play")
 		self._play_btn.clicked.connect(self._toggle_play)
 		cl.addWidget(self._play_btn)
 		b = QtWidgets.QPushButton("Stop")
+		b.setObjectName("secondaryButton")
 		b.clicked.connect(self._stop)
 		cl.addWidget(b)
 		self._fs_btn = QtWidgets.QPushButton("Fullscreen")
+		self._fs_btn.setObjectName("secondaryButton")
 		self._fs_btn.clicked.connect(self._toggle_fs)
 		cl.addWidget(self._fs_btn)
-		cl.addWidget(QtWidgets.QLabel("Vol"))
+		vol_label = QtWidgets.QLabel("Volume")
+		vol_label.setObjectName("sectionLabel")
+		cl.addWidget(vol_label)
 		vol = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
 		vol.setRange(0, 100)
 		vol.setValue(80)
+		vol.setFixedWidth(120)
 		vol.valueChanged.connect(self.player.audio_set_volume)
 		cl.addWidget(vol)
 		cl.addStretch()
 		self._status = QtWidgets.QLabel("Drop a video to start")
+		self._status.setObjectName("statusLabel")
 		cl.addWidget(self._status)
-		self._ctrl_w = QtWidgets.QWidget()
 		self._ctrl_w.setLayout(cl)
 		self._rl.addWidget(self._ctrl_w)
 
@@ -536,6 +580,9 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		self.setCentralWidget(c)
 		self._ctrl_w.hide()
 		self._prog_w.hide()
+		self._queue_label.hide()
+		self._qw.hide()
+		self._refresh_selection_button()
 
 	def _connect_sync(self):
 		self.sync.connect_room(
@@ -550,6 +597,10 @@ class VideoPlayer(QtWidgets.QMainWindow):
 	def _on_sync_connected(self, connected):
 		self._connect_btn.setEnabled(not connected)
 		self._disconnect_btn.setEnabled(connected)
+		for w in (self._server_in, self._room_in, self._name_in):
+			w.setEnabled(not connected)
+		if connected:
+			self._sync_status.setText(f"Connected to {self._room_in.text().strip()}")
 
 	def _on_sync_members(self, members):
 		names = [m.get("name", "Guest") for m in members]
@@ -580,6 +631,7 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		self._sel_btn.setVisible(self._plw.count() > 0)
 		self._ctrl_w.show()
 		self._prog_w.show()
+		self._refresh_selection_button()
 		if auto:
 			self._play_index(len(self.playlist) - len(new))
 		lang = self.lang_combo.currentData() or "eng"
@@ -595,6 +647,7 @@ class VideoPlayer(QtWidgets.QMainWindow):
 			it.setData(QtCore.Qt.ItemDataRole.UserRole + 1, p.name)
 			self._qw.addItem(it)
 			self._q_items[self._jid] = it
+		self._refresh_queue_visibility()
 		self._pump()
 
 	def _play_index(self, idx, remote=False):
@@ -611,6 +664,23 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		st = QtCore.Qt.CheckState.Unchecked if on else QtCore.Qt.CheckState.Checked
 		for i in range(n):
 			self._plw.item(i).setCheckState(st)
+		self._refresh_selection_button()
+
+	def _refresh_selection_button(self):
+		n = self._plw.count()
+		if not n:
+			self._sel_btn.hide()
+			return
+		checked = sum(
+			1 for i in range(n) if self._plw.item(i).checkState() == QtCore.Qt.CheckState.Checked
+		)
+		self._sel_btn.show()
+		self._sel_btn.setText("Clear Selection" if checked == n and n > 0 else "Select All")
+
+	def _refresh_queue_visibility(self):
+		has_queue = self._qw.count() > 0
+		self._queue_label.setVisible(has_queue)
+		self._qw.setVisible(has_queue)
 
 	def _download_subs(self):
 		lang = self.lang_combo.currentData() or "eng"
@@ -635,6 +705,7 @@ class VideoPlayer(QtWidgets.QMainWindow):
 			it.setData(QtCore.Qt.ItemDataRole.UserRole + 1, p.name)
 			self._qw.addItem(it)
 			self._q_items[self._jid] = it
+		self._refresh_queue_visibility()
 		self._pump()
 
 	def _pump(self):
@@ -663,6 +734,7 @@ class VideoPlayer(QtWidgets.QMainWindow):
 			self._activity.show()
 		else:
 			self._activity.hide()
+		self._refresh_queue_visibility()
 
 	def _load(self, path, remote=False):
 		self.media = self.instance.media_new(str(path))
@@ -705,19 +777,27 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		self._slider.setValue(0)
 		self._elapsed.setText("0:00")
 		self._total.setText("0:00")
-		if self.is_fullscreen:
-			self._toggle_fs()
 		if not remote:
 			self._broadcast("stop", {"position_ms": 0})
+		if self.media:
+			self._status.setText("Playback stopped")
+
+	def _begin_seek(self):
+		self._resume_after_seek = self.player.is_playing()
+		if self._resume_after_seek:
+			self.player.pause()
 
 	def _seek(self):
 		if not self.media:
 			return
 		pos = int(self._slider.value() / 1000.0 * max(1, self.player.get_length()))
 		self.player.set_position(self._slider.value() / 1000.0)
-		if not self.player.is_playing():
+		if self._resume_after_seek:
 			self.player.play()
-		self._play_btn.setText("Pause")
+			self._play_btn.setText("Pause")
+		else:
+			self._play_btn.setText("Play")
+		self._resume_after_seek = False
 		self._broadcast("seek", {"position_ms": pos})
 
 	def _on_lang_changed(self):
@@ -780,6 +860,7 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		it = self._q_items.pop(jid, None)
 		if it:
 			self._qw.takeItem(self._qw.row(it))
+		self._refresh_queue_visibility()
 		self._pump()
 
 	def _update_q(self, jid, status):
@@ -897,8 +978,8 @@ class VideoPlayer(QtWidgets.QMainWindow):
 	def _toggle_fs(self):
 		if self.is_fullscreen:
 			self.player.set_fullscreen(False)
-			self._ml.setContentsMargins(14, 14, 14, 14)
-			self._ml.setSpacing(10)
+			self._ml.setContentsMargins(18, 18, 18, 18)
+			self._ml.setSpacing(14)
 			self._vf.setStyleSheet(VIDEO_STYLE)
 			self._vf.setFrameStyle(QtWidgets.QFrame.Shape.StyledPanel | QtWidgets.QFrame.Shadow.Raised)
 			for w in (self._pf, self._ctrl_w, self._prog_w):
