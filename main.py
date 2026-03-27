@@ -669,36 +669,23 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		new = [p for p in paths if p.exists()]
 		if not new:
 			return
-		auto = self.media is None or self.player.get_state() in (vlc.State.Ended, vlc.State.Stopped)
 		for p in new:
 			self.playlist.append(p)
 			it = QtWidgets.QListWidgetItem(p.name)
 			it.setData(QtCore.Qt.ItemDataRole.UserRole, str(p))
 			it.setData(QtCore.Qt.ItemDataRole.UserRole + 2, media_signature(p))
 			it.setFlags(it.flags() | QtCore.Qt.ItemFlag.ItemIsUserCheckable)
-			it.setCheckState(QtCore.Qt.CheckState.Checked)
+			it.setCheckState(QtCore.Qt.CheckState.Unchecked)
 			self._plw.addItem(it)
 		self._sel_btn.setVisible(self._plw.count() > 0)
 		self._ctrl_w.show()
 		self._prog_w.show()
 		self._refresh_selection_button()
-		if auto:
-			self._play_index(len(self.playlist) - len(new))
-		lang = self.lang_combo.currentData() or "eng"
-		existing = {(Path(j["path"]).resolve(), j["lang"]) for j in self._jobs}
-		existing |= {(p.resolve(), l) for p, l in self._active.values()}
-		for p in new:
-			if (p.resolve(), lang) in existing:
-				continue
-			self._jid += 1
-			self._jobs.append({"id": self._jid, "path": p, "lang": lang})
-			it = QtWidgets.QListWidgetItem(f"Queued [{lang}]: {p.name}")
-			it.setData(QtCore.Qt.ItemDataRole.UserRole, self._jid)
-			it.setData(QtCore.Qt.ItemDataRole.UserRole + 1, p.name)
-			self._qw.addItem(it)
-			self._q_items[self._jid] = it
+		if self.current_index is None and self.playlist:
+			self.current_index = 0
+			self._plw.setCurrentRow(0)
+		self._status.setText(f"Added {len(new)} video(s). Double-click or press Play to start.")
 		self._refresh_queue_visibility()
-		self._pump()
 
 	def _play_index(self, idx, remote=False):
 		if 0 <= idx < len(self.playlist):
