@@ -35,42 +35,68 @@ LANG_MAP = {
 	"rus": "ru",
 }
 
-STYLE = (
-	"QWidget{font-family:'Inter','Avenir Next','Helvetica Neue',sans-serif;font-size:13px;color:#E5E7EB;"
-	"selection-background-color:#2563EB;selection-color:#F8FAFC}"
-	"QMainWindow{background:#0F172A}"
-	"QFrame#playlistFrame,QFrame#syncFrame,QFrame#controlCard,QFrame#progressCard{"
-	"background:#111827;border:1px solid #1F2937;border-radius:18px}"
-	"QFrame#videoFrame{background:#020617;border:1px solid #1E293B;border-radius:22px}"
-	"QPushButton{background:#2563EB;color:#F8FAFC;border:none;border-radius:10px;padding:9px 14px;font-weight:600}"
-	"QPushButton:hover{background:#1D4ED8}"
-	"QPushButton:pressed{background:#1E40AF}"
-	"QPushButton:disabled{background:#334155;color:#94A3B8}"
-	"QPushButton#secondaryButton{background:#1F2937;color:#E5E7EB;border:1px solid #334155}"
-	"QPushButton#secondaryButton:hover{background:#273449}"
-	"QPushButton#dangerButton{background:#7F1D1D;color:#FEE2E2;border:1px solid #991B1B}"
-	"QPushButton#dangerButton:hover{background:#991B1B}"
-	"QLabel{font-size:12px;color:#CBD5E1}"
-	"QLabel#titleLabel{font-size:16px;font-weight:700;color:#F8FAFC}"
-	"QLabel#sectionLabel{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#94A3B8}"
-	"QLabel#mutedLabel{color:#94A3B8}"
-	"QLabel#statusLabel{color:#E2E8F0;font-weight:600}"
-	"QLabel#badgeLabel{background:#172554;color:#BFDBFE;border:1px solid #1D4ED8;border-radius:999px;padding:4px 10px;font-weight:700}"
-	"QSlider::groove:horizontal{height:8px;background:#1E293B;border-radius:4px}"
-	"QSlider::handle:horizontal{background:#E2E8F0;width:16px;height:16px;margin:-5px 0;border-radius:8px}"
-	"QSlider::sub-page:horizontal{background:#2563EB;border-radius:4px}"
-	"QSlider::add-page:horizontal{background:#334155;border-radius:4px}"
-	"QListWidget{background:#0B1220;border:1px solid #1F2937;border-radius:14px;outline:none;padding:6px}"
-	"QListWidget::item{padding:10px 12px;border-radius:10px;color:#E5E7EB}"
-	"QListWidget::item:selected{background:#1D4ED8;color:#F8FAFC}"
-	"QListWidget::item:hover{background:#172033}"
-	"QLineEdit,QComboBox{background:#0B1220;border:1px solid #334155;border-radius:10px;padding:8px 10px;color:#F8FAFC}"
-	"QLineEdit:focus,QComboBox:focus{border:1px solid #2563EB}"
-)
-VIDEO_STYLE = (
-	"QFrame{background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 #020617,stop:0.6 #0B1220,stop:1 #111827);"
-	"border:1px solid #1E293B;border-radius:22px}"
-)
+def is_linux():
+	return sys.platform.startswith("linux")
+
+
+def base_font_family():
+	if sys.platform == "darwin":
+		return "'SF Pro Text','Inter','Avenir Next','Helvetica Neue',sans-serif"
+	if is_linux():
+		return "'Noto Sans','Inter','Ubuntu','Cantarell','DejaVu Sans',sans-serif"
+	return "'Segoe UI','Inter','Helvetica Neue',sans-serif"
+
+
+def build_style():
+	radius = 14 if is_linux() else 18
+	video_radius = 16 if is_linux() else 22
+	control_padding = "8px 12px" if is_linux() else "9px 14px"
+	item_padding = "8px 10px" if is_linux() else "10px 12px"
+	input_padding = "7px 9px" if is_linux() else "8px 10px"
+	return (
+		f"QWidget{{font-family:{base_font_family()};font-size:13px;color:#E5E7EB;"
+		"selection-background-color:#2563EB;selection-color:#F8FAFC}"
+		"QMainWindow{background:#0F172A}"
+		f"QFrame#playlistFrame,QFrame#syncFrame,QFrame#controlCard,QFrame#progressCard{{"
+		f"background:#111827;border:1px solid #1F2937;border-radius:{radius}px}}"
+		f"QFrame#videoFrame{{background:#020617;border:1px solid #1E293B;border-radius:{video_radius}px}}"
+		f"QPushButton{{background:#2563EB;color:#F8FAFC;border:none;border-radius:10px;padding:{control_padding};font-weight:600}}"
+		"QPushButton:hover{background:#1D4ED8}"
+		"QPushButton:pressed{background:#1E40AF}"
+		"QPushButton:disabled{background:#334155;color:#94A3B8}"
+		"QPushButton#secondaryButton{background:#1F2937;color:#E5E7EB;border:1px solid #334155}"
+		"QPushButton#secondaryButton:hover{background:#273449}"
+		"QPushButton#dangerButton{background:#7F1D1D;color:#FEE2E2;border:1px solid #991B1B}"
+		"QPushButton#dangerButton:hover{background:#991B1B}"
+		"QLabel{font-size:12px;color:#CBD5E1}"
+		"QLabel#titleLabel{font-size:16px;font-weight:700;color:#F8FAFC}"
+		"QLabel#sectionLabel{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#94A3B8}"
+		"QLabel#mutedLabel{color:#94A3B8}"
+		"QLabel#statusLabel{color:#E2E8F0;font-weight:600}"
+		"QLabel#badgeLabel{background:#172554;color:#BFDBFE;border:1px solid #1D4ED8;border-radius:999px;padding:4px 10px;font-weight:700}"
+		"QSlider::groove:horizontal{height:8px;background:#1E293B;border-radius:4px}"
+		"QSlider::handle:horizontal{background:#E2E8F0;width:16px;height:16px;margin:-5px 0;border-radius:8px}"
+		"QSlider::sub-page:horizontal{background:#2563EB;border-radius:4px}"
+		"QSlider::add-page:horizontal{background:#334155;border-radius:4px}"
+		f"QListWidget{{background:#0B1220;border:1px solid #1F2937;border-radius:{max(radius - 4, 10)}px;outline:none;padding:6px}}"
+		f"QListWidget::item{{padding:{item_padding};border-radius:10px;color:#E5E7EB}}"
+		"QListWidget::item:selected{background:#1D4ED8;color:#F8FAFC}"
+		"QListWidget::item:hover{background:#172033}"
+		f"QLineEdit,QComboBox{{background:#0B1220;border:1px solid #334155;border-radius:10px;padding:{input_padding};color:#F8FAFC}}"
+		"QLineEdit:focus,QComboBox:focus{border:1px solid #2563EB}"
+	)
+
+
+def build_video_style():
+	video_radius = 16 if is_linux() else 22
+	return (
+		f"QFrame{{background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 #020617,stop:0.6 #0B1220,stop:1 #111827);"
+		f"border:1px solid #1E293B;border-radius:{video_radius}px}}"
+	)
+
+
+STYLE = build_style()
+VIDEO_STYLE = build_video_style()
 
 
 def clean_title(stem):
@@ -376,9 +402,10 @@ class VideoPlayer(QtWidgets.QMainWindow):
 	def __init__(self):
 		super().__init__()
 		self.setWindowTitle("AutoSub")
-		self.resize(1180, 680)
+		self.resize(1160 if is_linux() else 1180, 760 if is_linux() else 680)
 		self.setAcceptDrops(True)
 		self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
+		self._apply_platform_tweaks()
 		self.setStyleSheet(STYLE)
 		self.instance = vlc.Instance()
 		self.player = self.instance.media_player_new()
@@ -406,18 +433,40 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		self.sync.memberChanged.connect(self._on_sync_members)
 		self.sync.eventReceived.connect(self._apply_remote_event)
 
+	def _apply_platform_tweaks(self):
+		QtWidgets.QApplication.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
+		font = QtGui.QFont()
+		font.setPointSize(10 if is_linux() else 11)
+		QtWidgets.QApplication.setFont(font)
+		if is_linux():
+			self.setMinimumSize(980, 700)
+		else:
+			self.setMinimumSize(960, 620)
+
 	def _build_ui(self):
 		c = QtWidgets.QWidget()
 		self._ml = QtWidgets.QHBoxLayout(c)
-		self._ml.setContentsMargins(18, 18, 18, 18)
-		self._ml.setSpacing(14)
+		self._default_outer_margins = 14 if is_linux() else 18
+		self._default_outer_spacing = 12 if is_linux() else 14
+		self._card_margins = 14 if is_linux() else 16
+		self._card_spacing = 10 if is_linux() else 12
+		self._compact_spacing = 10 if is_linux() else 12
+		self._control_slider_width = 96 if is_linux() else 120
+		self._queue_height = 84 if is_linux() else 100
+		self._ml.setContentsMargins(
+			self._default_outer_margins,
+			self._default_outer_margins,
+			self._default_outer_margins,
+			self._default_outer_margins,
+		)
+		self._ml.setSpacing(self._default_outer_spacing)
 
 		self._pf = QtWidgets.QFrame()
 		self._pf.setObjectName("playlistFrame")
 		self._pf.setFrameStyle(QtWidgets.QFrame.Shape.StyledPanel | QtWidgets.QFrame.Shadow.Raised)
 		pl = QtWidgets.QVBoxLayout(self._pf)
-		pl.setContentsMargins(16, 16, 16, 16)
-		pl.setSpacing(12)
+		pl.setContentsMargins(self._card_margins, self._card_margins, self._card_margins, self._card_margins)
+		pl.setSpacing(self._card_spacing)
 
 		hdr = QtWidgets.QHBoxLayout()
 		playlist_title = QtWidgets.QLabel("Library")
@@ -464,14 +513,14 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		self._queue_label.setObjectName("sectionLabel")
 		pl.addWidget(self._queue_label)
 		self._qw = QtWidgets.QListWidget()
-		self._qw.setFixedHeight(100)
+		self._qw.setMaximumHeight(self._queue_height)
 		pl.addWidget(self._qw)
 
 		self._sync_frame = QtWidgets.QFrame()
 		self._sync_frame.setObjectName("syncFrame")
 		sl = QtWidgets.QVBoxLayout(self._sync_frame)
-		sl.setContentsMargins(16, 16, 16, 16)
-		sl.setSpacing(10)
+		sl.setContentsMargins(self._card_margins, self._card_margins, self._card_margins, self._card_margins)
+		sl.setSpacing(self._compact_spacing)
 		sync_title = QtWidgets.QLabel("Watch Together")
 		sync_title.setObjectName("titleLabel")
 		sl.addWidget(sync_title)
@@ -517,7 +566,7 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		pl.addWidget(self._sync_frame)
 
 		self._rl = QtWidgets.QVBoxLayout()
-		self._rl.setSpacing(14)
+		self._rl.setSpacing(self._default_outer_spacing)
 		self._vf = QtWidgets.QFrame()
 		self._vf.setObjectName("videoFrame")
 		self._vf.setStyleSheet(VIDEO_STYLE)
@@ -529,8 +578,8 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		self._prog_w = QtWidgets.QFrame()
 		self._prog_w.setObjectName("progressCard")
 		pr = QtWidgets.QHBoxLayout()
-		pr.setContentsMargins(16, 12, 16, 12)
-		pr.setSpacing(12)
+		pr.setContentsMargins(self._card_margins, 12 if is_linux() else 12, self._card_margins, 12)
+		pr.setSpacing(self._compact_spacing)
 		self._elapsed = QtWidgets.QLabel("0:00")
 		self._slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
 		self._slider.setRange(0, 1000)
@@ -546,8 +595,8 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		self._ctrl_w = QtWidgets.QFrame()
 		self._ctrl_w.setObjectName("controlCard")
 		cl = QtWidgets.QHBoxLayout()
-		cl.setContentsMargins(16, 12, 16, 12)
-		cl.setSpacing(12)
+		cl.setContentsMargins(self._card_margins, 12, self._card_margins, 12)
+		cl.setSpacing(self._compact_spacing)
 		self._play_btn = QtWidgets.QPushButton("Play")
 		self._play_btn.clicked.connect(self._toggle_play)
 		cl.addWidget(self._play_btn)
@@ -565,7 +614,7 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		vol = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
 		vol.setRange(0, 100)
 		vol.setValue(80)
-		vol.setFixedWidth(120)
+		vol.setMaximumWidth(self._control_slider_width)
 		vol.valueChanged.connect(self.player.audio_set_volume)
 		cl.addWidget(vol)
 		cl.addStretch()
@@ -575,6 +624,7 @@ class VideoPlayer(QtWidgets.QMainWindow):
 		self._ctrl_w.setLayout(cl)
 		self._rl.addWidget(self._ctrl_w)
 
+		self._pf.setMinimumWidth(340 if is_linux() else 360)
 		self._ml.addWidget(self._pf, stretch=0)
 		self._ml.addLayout(self._rl, stretch=1)
 		self.setCentralWidget(c)
@@ -739,14 +789,19 @@ class VideoPlayer(QtWidgets.QMainWindow):
 	def _load(self, path, remote=False):
 		self.media = self.instance.media_new(str(path))
 		self.player.set_media(self.media)
+		self._vf.winId()
+		QtWidgets.QApplication.processEvents()
 		wid = int(self._vf.winId())
-		(
-			self.player.set_nsobject
-			if sys.platform == "darwin"
-			else self.player.set_hwnd
-			if sys.platform.startswith("win")
-			else self.player.set_xwindow
-		)(wid)
+		try:
+			if sys.platform == "darwin":
+				self.player.set_nsobject(wid)
+			elif sys.platform.startswith("win"):
+				self.player.set_hwnd(wid)
+			else:
+				self.player.set_xwindow(wid)
+		except Exception as e:
+			self._status.setText(f"Video output error: {e}")
+			return
 		self._status.setText(f"Loaded {path.name}")
 		self._slider.setValue(0)
 		self._elapsed.setText("0:00")
@@ -978,8 +1033,13 @@ class VideoPlayer(QtWidgets.QMainWindow):
 	def _toggle_fs(self):
 		if self.is_fullscreen:
 			self.player.set_fullscreen(False)
-			self._ml.setContentsMargins(18, 18, 18, 18)
-			self._ml.setSpacing(14)
+			self._ml.setContentsMargins(
+				self._default_outer_margins,
+				self._default_outer_margins,
+				self._default_outer_margins,
+				self._default_outer_margins,
+			)
+			self._ml.setSpacing(self._default_outer_spacing)
 			self._vf.setStyleSheet(VIDEO_STYLE)
 			self._vf.setFrameStyle(QtWidgets.QFrame.Shape.StyledPanel | QtWidgets.QFrame.Shadow.Raised)
 			for w in (self._pf, self._ctrl_w, self._prog_w):
@@ -997,7 +1057,8 @@ class VideoPlayer(QtWidgets.QMainWindow):
 			for w in (self._pf, self._ctrl_w, self._prog_w):
 				w.hide()
 			self.showFullScreen()
-			self.player.set_fullscreen(True)
+			if not is_linux():
+				self.player.set_fullscreen(True)
 			self._fs_btn.setText("Windowed")
 		self.is_fullscreen = not self.is_fullscreen
 
